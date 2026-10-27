@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.log
+test-results/
+
+dist/
+release/
+
+%LOCALAPPDATA%/

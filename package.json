@@ -1,0 +1,15 @@
+{
+  "name": "ward-zero",
+  "version": "0.4.0",
+  "private": true,
+  "description": "零号病区：四章第一人称温和探索测试版",
+  "scripts": {
+    "start": "node server.cjs",
+    "check": "node --check dust2-layout.js && node --check dust2-scene.js && node --check dust2-architecture.js && node --check terrain.js && node --check core.js && node --check audio.js && node --check renderer.js && node --check world3d.js && node --check input.js && node --check game.js && node --check server.cjs",
+    "test": "node tests/routes.cjs && node tests/elevation.cjs",
+    "build": "node scripts/build-site.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
