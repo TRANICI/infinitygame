@@ -242,4 +242,3 @@ class WardRenderer {
   }
   drawMap(g){this.assets.drawMap(g);}
 }
-

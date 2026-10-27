@@ -49,4 +49,6 @@ npm run build          # 生成纯静态 dist/
 
 ## GitHub Pages
 
-发布步骤见 [PUBLISHING.md](PUBLISHING.md)。工作流已准备好，仓库和线上页面尚未创建。
+仓库：[TRANICI/infinitygame](https://github.com/TRANICI/infinitygame)。
+
+在线入口：[开始游戏](https://tranici.github.io/infinitygame/)。推送 `main` 后由 GitHub Actions 自动部署；可在仓库 Actions 页面查看发布状态。发布说明见 [PUBLISHING.md](PUBLISHING.md)。
