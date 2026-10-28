@@ -10,6 +10,9 @@ console.log(vm.runInContext(`(()=>{
  const lastTarget=JSON.stringify(s.enemy.target);s.player.hidden=true;s.player.x=128;for(let n=0;n<60;n++)ai.update(1/60);assert.equal(JSON.stringify(s.enemy.target),lastTarget,'hiding does not reveal new coordinates');assert.equal(caught,0);
  for(let n=0;n<460;n++)ai.update(1/60);assert.equal(s.enemy.mode,'search','persistent search after last seen memory');
  s.enemy.mode='patrol';s.enemy.lure={x:126,y:60,elevation:4.68};s.enemy.lureTime=8;ai.update(.05);assert.equal(s.enemy.mode,'investigate');
+ const frozen=JSON.stringify(s.enemy);ai.update(0);assert.equal(JSON.stringify(s.enemy),frozen,'zero dt cannot poison motion with NaN');
+ s.enemy.path=[{x:128,y:64}];s.enemy.repath=2;s.enemy.lure={x:126,y:59,elevation:4.68};s.enemy.lureTime=8;ai.update(.01);assert.equal(s.enemy.target,s.enemy.lure);assert.ok(s.enemy.path.length===0||s.enemy.path[0].x!==128,'new sound discards previous route immediately');
+ s.enemy.mode='search';s.enemy.lureTime=0;s.enemy.searchTime=4;const heading=s.enemy.angle;ai.update(.1);assert.notEqual(s.enemy.angle,heading,'search visibly scans the corridor');
  s.player.hidden=false;Object.assign(s.enemy,{x:s.player.x,y:s.player.y,elevation:4.68,lureTime:0});ai.update(.01);assert.equal(caught,1,'close contact catches');
  const saved=[...s.charted];Object.assign(s.player,{x:204,y:86,elevation:4.68});cart.update(true);assert.ok(s.charted.length>saved.length);const revealed=[...s.charted];cart.reset(revealed);assert.ok(WardCartography.known(s,204,86),'map persists');cart.reset();assert.equal(s.charted.length,0,'new game clears map');
  Object.assign(s.player,{x:11,y:26.5,elevation:4.68});cart.update(true);assert.ok(!WardCartography.known(s,4,25),'closed room not revealed through door');

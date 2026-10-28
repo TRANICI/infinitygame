@@ -20,7 +20,7 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'d
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
     env=dict(os.environ,WARD_TEST_URL=f'http://127.0.0.1:{server.server_port}/infinitygame/index.html')
-    suites=['room-ui.py','horror-ui.py','pursuit-ui.py']
+    suites=['room-ui.py','horror-ui.py','pursuit-ui.py','polish-ui.py']
     for suite in suites:
         result=subprocess.run([sys.executable,str(ROOT/'tests'/suite)],env=env,cwd=ROOT)
         if result.returncode:break

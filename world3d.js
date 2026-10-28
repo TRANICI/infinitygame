@@ -4,7 +4,7 @@ class WardMesh {
   constructor(atlas){this.atlas=atlas;this.data=[];}
   vertex(p,n,uv,color,glow,surfaceY=0){this.data.push(...p,...n,...uv,...color,glow,surfaceY);}
   quad(points,n,tile='white',color=[1,1,1],glow=0){
-    if(glow===0)glow=tile==='metal'?-4:tile==='ceiling'?-5:0;
+    if(glow===0)glow=tile==='metal'?-4:tile==='ceiling'?-5:/^wall\d$/.test(tile)?-3:0;
     const uv=this.atlas[tile]||this.atlas.white;
     const coords=[[uv[0],uv[1]],[uv[2],uv[1]],[uv[2],uv[3]],[uv[0],uv[3]]];
     const low=Math.min(...points.map(p=>p[1])),high=Math.max(...points.map(p=>p[1]));
@@ -40,7 +40,7 @@ class WardMesh {
 class WardRenderer {
   constructor(canvas){
     this.canvas=canvas;
-    const gl=canvas.getContext('webgl',{alpha:false,antialias:true,powerPreference:'high-performance'});
+    const gl=canvas.getContext('webgl',{alpha:false,antialias:false,powerPreference:'high-performance'});
     if(!gl)return new WardLegacyRenderer(canvas);
     this.gl=gl;this.kind='webgl';this.assets=new WardLegacyRenderer(document.createElement('canvas'));this.worldKey='';this.staticLevel=-1;
     this.program=this.programFrom(
@@ -57,27 +57,26 @@ class WardRenderer {
         bool surface=vGlow<0.0;bool floorSurface=vGlow> -2.5&&surface;
         if(surface){
           vec2 plane=an.y>.5?vWorld.xz:an.x>.5?vWorld.zy:vWorld.xy;
-          vec2 repeat=fract(plane*(floorSurface?.48:vGlow< -4.5?.28:.3));
+          vec2 repeat=fract(plane*(floorSurface?.22:vGlow< -4.5?.28:.3));
           if(vGlow> -3.5&&!floorSurface)repeat.y=clamp(1.0-vSurfaceY,.01,.99);
           vec2 tile=floorSurface?vec2(.5,0.0):vGlow< -4.5?vec2(.5,.5):vGlow< -3.5?vec2(0.0,.5):vec2(0.0,0.0);
           tex=texture2D(uSurfaces,tile+vec2(.002)+repeat*.496);
         }else tex=texture2D(uAtlas,vUV);
         if(tex.a<.045)discard;
-        vec3 ambient=vec3(.105,.135,.15)*(0.72+max(0.0,n.y)*.45);
+        vec3 ambient=vec3(.14,.17,.135)*(0.72+max(0.0,n.y)*.45);
         vec3 lighting=ambient;float specular=0.0;
         for(int i=0;i<8;i++){
           vec3 delta=uLights[i].xyz-vWorld;float d=length(delta),radius=max(.01,uLights[i].w);
           vec3 dir=delta/max(d,.01);float falloff=pow(max(0.0,1.0-d/radius),2.0);
-          lighting+=uLightColors[i]*falloff*(.12+.88*max(0.0,dot(n,dir)))*1.7;
+          lighting+=uLightColors[i]*falloff*(.18+.82*max(0.0,dot(n,dir)))*1.3;
           specular+=pow(max(0.0,dot(n,normalize(dir+view))),48.0)*falloff*.22;
         }
-        float cone=smoothstep(.86,.995,dot(-view,uForward));
+        float cone=smoothstep(.82,.995,dot(-view,uForward));
         float beam=cone*uTorch*1.9/(1.0+dist*.075+dist*dist*.008);
-        lighting+=vec3(1.0,.91,.76)*beam*(.28+.72*max(0.0,dot(n,view)));
+        lighting+=vec3(.94,1.0,.82)*beam*(.28+.72*max(0.0,dot(n,view)));
         vec3 albedo=tex.rgb*vColor;
         float grime=surface?.86+.14*sin(vWorld.x*.7+sin(vWorld.z*.44)+vWorld.y*.6):1.0;
-        // Deliberate broad bands of light keep the image graphic and restrained.
-        lighting=mix(lighting,floor(lighting*7.0+.2)/7.0,.45);
+        lighting=mix(lighting,floor(lighting*12.0+.2)/12.0,.12);
         vec3 color=albedo*grime*lighting;
         if(floorSurface){float wet=smoothstep(.3,.8,sin(vWorld.x*.53+sin(vWorld.z*.34))*cos(vWorld.z*.65));color+=vec3(.32,.4,.38)*wet*specular;}
         color=mix(color,albedo,clamp(vGlow,0.0,1.0));
@@ -97,7 +96,7 @@ class WardRenderer {
     for(const[type,source]of[[gl.VERTEX_SHADER,vs],[gl.FRAGMENT_SHADER,fs]]){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));gl.attachShader(p,s);}
     gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;
   }
-  resize(){const ratio=Math.min(1,1440/innerWidth);this.w=this.canvas.width=Math.round(innerWidth*ratio);this.h=this.canvas.height=Math.round(innerHeight*ratio);this.gl.viewport(0,0,this.w,this.h);}
+  resize(){const ratio=Math.min(.75,800/innerWidth);this.w=this.canvas.width=Math.max(240,Math.round(innerWidth*ratio));this.h=this.canvas.height=Math.round(this.w*innerHeight/innerWidth);this.gl.viewport(0,0,this.w,this.h);}
   makeTextures(){
     this.assets.makeTextures();const atlas=document.createElement('canvas');
     // Reserve space for room signs and controls as the level grows.
@@ -127,6 +126,8 @@ class WardRenderer {
     tile('wood',x=>{x.fillStyle='#bcaa82';x.fillRect(0,0,128,128);x.strokeStyle='#9e8d69';for(let i=0;i<128;i+=16){x.strokeRect(i,0,16,128);}x.strokeStyle='#ddd0a5';x.lineWidth=8;x.strokeRect(5,5,118,118);});
     tile('metal',x=>{x.fillStyle='#a5bab0';x.fillRect(0,0,128,128);x.strokeStyle='#c9d6c7';x.strokeRect(3,3,122,122);});
     tile('curtain',x=>{x.fillStyle='#8a8a74';x.fillRect(0,0,128,128);const r=WZ.random(45);for(let i=0;i<1500;i++){x.fillStyle=i%3?'#17201c13':'#5c43222b';x.fillRect(r()*128,r()*128,1+r()*12,1+r()*25);}for(let i=0;i<128;i+=9){x.fillStyle='#151e191c';x.fillRect(i,0,3,128);}x.strokeStyle='#303a2966';x.lineWidth=2;x.beginPath();x.moveTo(19,17);x.lineTo(25,53);x.lineTo(21,85);x.stroke();});
+    tile('relief-mask',x=>WardRelief.mask(x));
+    tile('ward-cross',x=>{x.clearRect(0,0,128,128);x.fillStyle='#314f40';x.fillRect(48,16,32,96);x.fillRect(16,48,96,32);});
     tile('staff-badge',x=>{x.fillStyle='#baad8c';x.fillRect(0,0,128,128);x.fillStyle='#292d27';x.fillRect(16,18,34,45);x.font='bold 17px sans-serif';x.fillText('林秋',58,43);x.font='13px monospace';x.fillText('0217',20,88);x.strokeStyle='#564735';x.strokeRect(7,6,114,116);});
     tile('stain',x=>{x.clearRect(0,0,128,128);x.fillStyle='#932f20';x.beginPath();x.moveTo(20,8);x.lineTo(70,18);x.lineTo(103,43);x.lineTo(83,59);x.lineTo(92,96);x.lineTo(56,82);x.lineTo(39,121);x.lineTo(30,69);x.lineTo(8,56);x.closePath();x.fill();for(let n=0;n<4;n++)x.fillRect(35+n*11,3+n*4,5,36);});
     if(WZ.levelIndex===0){
@@ -167,7 +168,15 @@ class WardRenderer {
   }
   handMesh(){
     const m=new WardMesh(this.tiles),o={x:0,y:0,angle:Math.PI/2};
-    m.box(o,.3,-.37,-.48,.12,.11,.14,'white',[.74,.72,.57]);m.box(o,.29,-.31,-.56,.07,.075,.27,'metal',[.27,.39,.3]);m.box(o,.29,-.32,-.71,.115,.1,.055,'metal',[.6,.67,.5]);m.box(o,.29,-.3,-.744,.085,.07,.005,'white',[.99,.99,.78],1);return m;
+    const cylinder=(a,b,r,color,glow=0)=>{
+      const axis=b.map((v,i)=>v-a[i]),len=Math.hypot(...axis),n=axis.map(v=>v/len),u=[n[2],0,-n[0]],ul=Math.hypot(...u);for(let i=0;i<3;i++)u[i]/=ul;
+      const v=[n[1]*u[2],n[2]*u[0]-n[0]*u[2],-n[1]*u[0]],point=(p,t)=>p.map((x,i)=>x+r*(Math.cos(t)*u[i]+Math.sin(t)*v[i]));
+      for(let i=0;i<10;i++){const t=i*WZ.TAU/10,q=(i+1)*WZ.TAU/10,normal=u.map((x,j)=>x*Math.cos((t+q)/2)+v[j]*Math.sin((t+q)/2));m.quad([point(a,t),point(a,q),point(b,q),point(b,t)],normal,'white',color,glow);m.quad([b,point(b,t),point(b,q),b],n,'white',color,glow);}
+    };
+    m.box(o,.35,-.49,-.53,.085,.16,.1,'white',[.29,.34,.26]);
+    cylinder([.34,-.42,-.57],[.25,-.16,-.57],.038,[.13,.23,.18]);
+    cylinder([.262,-.195,-.57],[.245,-.145,-.57],.054,[.34,.41,.31]);
+    cylinder([.245,-.145,-.57],[.244,-.142,-.57],.044,[.73,.79,.54],.9);return m;
   }
   object(mesh,o,taken,power){
     const w=o.width,d=o.depth;
@@ -491,7 +500,7 @@ class WardRenderer {
       else m.box({x:p.x,y:p.y,baseY:h,angle:Math.PI/2},0,3.65,0,1,.08,.2,'metal',[.28,.3,.27]);
       const o={x:p.x,y:p.y,baseY:h,angle:Math.PI/2};m.box(o,0,.01,0,.18,.01,.5,'white',[.62,.72,.6]);
       const wall=[[-1,0],[1,0],[0,-1],[0,1]].find(([dx,dz])=>!a.contains(p.x+dx*2,p.y+dz*2));
-      if(wall){const[dx,dz]=wall;const plate={x:p.x+dx*1.485,y:p.y+dz*1.485,baseY:h,angle:Math.atan2(-dz,-dx)};m.panel(plate,1.6,1.1,.35,.01,'annex-number');}
+      if(wall){const[dx,dz]=wall;const plate={x:p.x+dx*1.485,y:p.y+dz*1.485,baseY:h,angle:Math.atan2(-dz,-dx)};m.panel(plate,1.6,1.1,.35,.01,'annex-number');if(index%2===0)m.panel(plate,2.15,.38,.38,.012,'ward-cross');}
     }
     for(const [i,sign]of a.signs.entries()){
       const o={...sign,baseY:h};for(const x of[-1.1,1.1])m.box(o,x,3.1,0,.035,.7,.035,'metal',[.39,.57,.5]);m.box(o,0,2.5,0,3.1,.6,.08,'metal',[.39,.57,.5]);m.panel(o,2.52,3,.56,.05,'annex-sign-'+i);
@@ -541,8 +550,8 @@ class WardRenderer {
       this.interactives=this.upload(dynamic,this.interactives);this.worldKey=key;
     }
     const source=home?WZ.level.start:p,angle=home?source.angle+Math.sin(time*.08)*.035:p.angle,pitch=home?-.03:p.pitch;
-    const eye=[source.x,(home?(WZ.groundHeight(source.x,source.y)??0):(p.eyeElevation??p.elevation??WZ.groundHeight(p.x,p.y)??0))+(home?1.63:p.hidden?1.3:p.crouch?1.05:1.63)+(home||p.hidden?0:Math.sin(g.walkPhase)*g.moveAmount*.012),source.y],camera=this.camera(eye,angle,pitch);
-    const fog=[.025,.035,.038],lights=WardAtmosphere.nearest(this,eye);
+    const eye=[source.x,(home?(WZ.groundHeight(source.x,source.y)??0):(p.eyeElevation??p.elevation??WZ.groundHeight(p.x,p.y)??0))+(home?1.63:p.hidden?1.3:p.crouch?1.05:1.63)+(home||p.hidden||WZ.settings.reducedMotion?0:Math.sin(g.walkPhase)*g.moveAmount*.012),source.y],camera=this.camera(eye,angle,pitch);
+    const fog=[.029,.041,.032],lights=WardAtmosphere.nearest(this,eye);
     gl.clearColor(...fog,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(this.program);gl.uniformMatrix4fv(this.uniform.uVP,false,camera.vp);gl.uniform3fv(this.uniform.uEye,eye);gl.uniform3fv(this.uniform.uForward,camera.forward);gl.uniform3fv(this.uniform.uFog,fog);gl.uniform1f(this.uniform.uTorch,p.torch?1:0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.uniform1i(this.uniform.uAtlas,0);
     gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,this.surface.texture);gl.uniform1i(this.uniform.uSurfaces,1);gl.uniform4fv(this.uniform['uLights[0]'],lights.pos);gl.uniform3fv(this.uniform['uLightColors[0]'],lights.colors);
     this.draw(this.world,this.identity());this.draw(this.interactives,this.identity());

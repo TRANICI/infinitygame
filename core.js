@@ -167,7 +167,7 @@ const WZ=(()=>{
   function refreshCollision(){indexObjects();navigation=null;terrain.navigation=null;collisionVersion++;}
   function area(x,y){const room=DUST2_ROOMS.at(x,y);if(room)return room.name;if(DUST2_ANNEX.contains(x,y)&&x>111.5)return DUST2_ANNEX.area(x,y);if(levelIndex===0&&x>151*ds&&x<302*ds&&y>610*ds&&y<711*ds)return '遗忘花园';return active.zones?.find(([,x1,y1,x2,y2])=>x>=x1&&x<=x2&&y>=y1&&y<=y2)?.[0]||active.name;}
   const storage={get(key,fallback){try{const s=localStorage.getItem('wardzero.'+key);return s===null?fallback:JSON.parse(s);}catch{return fallback;}},set(key,value){try{localStorage.setItem('wardzero.'+key,JSON.stringify(value));}catch{}}};
-  const settings={shocks:true,grisly:true,volume:35,brightness:110,sensitivity:50,grain:false,...storage.get('settings',{})};
+  const settings={reducedMotion:typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches,shocks:true,grisly:true,volume:35,brightness:110,sensitivity:50,grain:false,...storage.get('settings',{})};
   loadLevel(0);
   return{TAU,clamp,angleDiff,distance,random,interactionPoint,interactionDistance,nearbyInteractions,get width(){return width;},get height(){return height;},get cells(){return cells;},get collisionVersion(){return collisionVersion;},terrain,groundHeight,supportHeight,jump,settle,solid,boundsHit,canStand,move,lineOfSight,findPath,createObjects,refreshCollision,area,storage,settings,levels,loadLevel,get level(){return active;},get levelIndex(){return levelIndex;}};
 })();

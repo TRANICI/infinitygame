@@ -2,7 +2,7 @@
 
 第一人称网页恐怖调查游戏。当前集中制作第一关「零号院区 · 未完夜班」，第 2、3、4 关已暂时退出游戏，原章节资料保存在 `archive/`，不随游戏加载或打包。
 
-林秋收到妹妹的求救语音，回到关闭三年的医院，却发现每天都有自己的值班签名。剧情使用口语、反复改口与身份冒用制造异常感，操作线索直接说明。[完整剧情](design/story.md) · [玩家视角审查](design/player-review.md) · [代班者设计](design/pursuer/README.md)。代班者现已接入实机，具有低多边形模型、巡查、追逐、声源调查、丢失目标后搜查、凝视紧张反馈和近身突脸。采用简化画面与局部照明；墙壁按用户要求回退为更早的灰黄细颗粒材质，不使用写实血肉贴图。
+林秋收到妹妹的求救语音，回到关闭三年的医院，却发现每天都有自己的值班签名。剧情使用口语、反复改口与身份冒用制造异常感，操作线索直接说明。[完整剧情](design/story.md) · [玩家视角审查](design/player-review.md) · [代班者设计](design/pursuer/README.md)。代班者现已接入实机，具有低多边形模型、巡查、追逐、声源调查、丢失目标后搜查、凝视紧张反馈和近身突脸。本轮按用户参考图统一为低清复古病院：灰绿墙面、深绿墙裙、暗色方砖、柔和照明、圆筒手电和无大块底色的 HUD。
 
 当前为夜班调查场景：旧地名已替换成候诊庭院、病历交接廊、救护庭院、门诊长街、值班入口等院区名称。较低的环境照明、远处薄雾、封院告示、封死的井口和重复处方共同塑造异常感。原有几何轮廓仍是改造基础，沿途可进入附属房间。
 
@@ -89,9 +89,10 @@ npm run check                  # JavaScript 语法
 npm test                       # 原有通路、楼梯、跳跃、跌落，以及新增区域实际行走与门锁
 python tests/room-ui.py         # 背包、开锁、修复、地图、手机布局；无鼠标锁定
 python tests/horror-ui.py       # 院区谜题、障碍状态、剧情结局；隔离追逐随机性，无鼠标锁定
+python tests/polish-ui.py       # 模型边界、缓存、低动态效果、设置、触屏输入恢复
 python tests/pursuit-ui.py      # 实机追逐模型、突脸与关闭选项、恢复、探索地图和手机显示
 npm run build                  # 生成离线纯静态 dist/
-python tests/packaged.py        # 在 /infinitygame/ 子路径运行两套安全界面测试
+python tests/packaged.py        # 在 /infinitygame/ 子路径运行四套安全界面测试
 ```
 
 浏览器测试需要 Python Playwright 与 Chrome。以上界面测试使用 headless Chrome，通过 DOM 调用并拦截原生鼠标锁定，不控制桌面鼠标。`test-results/` 是本地测试输出，不进入游戏包。旧 `smoke.py`、`expansion.py` 等脚本保留早期输入和追逐测试，不作为当前版本的验收入口。
@@ -102,6 +103,8 @@ python tests/packaged.py        # 在 /infinitygame/ 子路径运行两套安全
 - `interactions.js`：背包、钥匙、搜寻、修复、购买、消耗品、投掷与持久化。
 - `investigation.js`：主线机关、笔记、门锁状态与存档恢复。
 - `terrain.js`：分层高度、楼梯和导航。
+- `relief-model.js`：代班者分段模型、面具共用画法与关节动画。
+- `pursuer.js`：追逐、声源调查与丢失目标后的搜查。
 - `world3d.js`：WebGL 地形、家具、门窗、机关和近距微光。
 - `dust2-layout.js` / `dust2-scene.js`：庭院主体轮廓及场景内容。
 - `dust2-architecture.js`：生成后的平台与楼梯。
@@ -115,4 +118,4 @@ python tests/packaged.py        # 在 /infinitygame/ 子路径运行两套安全
 
 用户已授权将本轮环境、追逐与探索地图改造发布至 GitHub Pages。运行检查通过后推送 main，由 Pages 工作流构建部署。线上地址：[零号病区](https://tranici.github.io/infinitygame/)。发布步骤见 [PUBLISHING.md](PUBLISHING.md)。
 
-2026-10-28 开始本轮发布前，本地 HEAD 与远端 main 均为 `625a4c6`；最终部署状态以 [Pages 工作流](https://github.com/TRANICI/infinitygame/actions/workflows/pages.yml)为准。
+2026-10-28 的 0.7.0 更新包含代班者重设计、操作修复与参考图画风；最终部署状态以 [Pages 工作流](https://github.com/TRANICI/infinitygame/actions/workflows/pages.yml)为准。

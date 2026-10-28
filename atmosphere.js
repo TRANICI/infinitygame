@@ -5,11 +5,11 @@ const WardAtmosphere={
     const canvas=document.createElement('canvas');canvas.width=canvas.height=tileSize*2;
     const c=canvas.getContext('2d'),r=WZ.random(21744);
     for(let i=0;i<4;i++){
-      const x=i%2*tileSize,y=Math.floor(i/2)*tileSize;c.save();c.translate(x,y);c.fillStyle=['#979789','#646e69','#484c49','#737568'][i];c.fillRect(0,0,tileSize,tileSize);
-      // Broad, sparse shapes: no photographic pores, tissue or surface noise.
-      for(let n=0;n<18;n++){const px=r()*tileSize,py=r()*tileSize,size=r()*24+4;c.fillStyle=['#252f2e20','#d0c6aa10','#493c3025'][n%3];c.fillRect(px,py,size,r()*size);}
-      if(i===0){c.fillStyle='#3f514c';c.fillRect(0,tileSize*.72,tileSize,tileSize*.28);c.fillStyle='#182724';c.fillRect(0,tileSize*.72,tileSize,2);}
-      if(i===1||i===3){c.strokeStyle='#171e1dbb';c.lineWidth=i===1?2:1;for(let n=0;n<tileSize;n+=tileSize/4){c.beginPath();c.moveTo(n,0);c.lineTo(n,tileSize);c.moveTo(0,n);c.lineTo(tileSize,n);c.stroke();}}
+      const x=i%2*tileSize,y=Math.floor(i/2)*tileSize;c.save();c.translate(x,y);c.fillStyle=['#849186','#72786b','#55655a','#62695c'][i];c.fillRect(0,0,tileSize,tileSize);
+      if(i===0){c.fillStyle='#304e43';c.fillRect(0,tileSize*.62,tileSize,tileSize*.38);c.fillStyle='#789184';c.fillRect(0,tileSize*.62,tileSize,1);c.fillStyle='#23392f';c.fillRect(0,tileSize-5,tileSize,5);}
+      // Seeded low-resolution plaster and terrazzo grain, stable between frames.
+      for(let n=0;n<3500;n++){const px=Math.floor(r()*tileSize),py=Math.floor(r()*tileSize);c.fillStyle=i===3?(n%2?'#d3dac308':'#172b2408'):(n%2?'#d3dac315':'#172b2419');c.fillRect(px,py,1+Math.floor(r()*3),1+Math.floor(r()*3));}
+      if(i===1||i===3){c.strokeStyle='#1b281fbb';c.lineWidth=1;for(let n=0;n<tileSize;n+=tileSize/4){c.beginPath();c.moveTo(n,0);c.lineTo(n,tileSize);c.moveTo(0,n);c.lineTo(tileSize,n);c.stroke();}}
       c.restore();
     }
     const texture=gl.createTexture(),upload=source=>{gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);};
@@ -17,8 +17,8 @@ const WardAtmosphere={
   },
   light(renderer,x,y,z,color=[.66,.78,.75],radius=8){renderer.lights.push({x,y,z,color,radius});},
   fixture(m,renderer,x,y,base,top=3.1,red=false){
-    const o={x,y,baseY:base,angle:Math.PI/2},tint=red?[.9,.12,.055]:[.66,.8,.75];
-    m.box(o,0,top,0,1.25,.12,.26,'metal',[.55,.58,.52]);m.box(o,0,top-.018,0,1.06,.025,.12,'white',tint,1);
+    const o={x,y,baseY:base,angle:Math.PI/2},tint=red?[.55,.3,.16]:[.72,.79,.59];
+    m.box(o,0,top,0,.78,.1,.48,'metal',[.35,.41,.32]);m.box(o,0,top-.04,0,.66,.055,.38,'white',tint,.85);
     this.light(renderer,x,base+top-.2,y,tint,red?6:8);
   },
   dress(m,renderer,g){
