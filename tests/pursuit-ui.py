@@ -9,18 +9,18 @@ def click(p,s):p.evaluate('s=>document.querySelector(s).click()',s)
 with sync_playwright() as pw:
  b=pw.chromium.launch(headless=True,channel='chrome');p=b.new_page(viewport={'width':1440,'height':900});p.add_init_script(SAFE);errors=[]
  p.on('pageerror',lambda e:errors.append(str(e)));p.goto(URL);p.wait_for_load_state('networkidle');click(p,'#start');click(p,'#chapter-next')
- assert p.evaluate('game.state.pursuerEnabled&&game.renderer.surface.ready')
+ assert p.evaluate('game.state.pursuerEnabled&&game.renderer.surface.ready&&typeof WardRelief==="undefined"')
  initial=p.evaluate('game.state.charted.length');assert 0<initial<35
  click(p,'#map-button');p.screenshot(path=str(OUT/'map-first-visit.png'))
  assert p.evaluate('[...document.querySelectorAll("#map-rooms span")].filter(e=>!e.hidden).length<3');click(p,'#map-close')
  p.evaluate('''()=>{const g=game.state;g.mode='preview';g.levelElapsed=30;Object.assign(g.player,{x:126,y:57.5,elevation:4.68,eyeElevation:4.68,angle:Math.PI/2,pitch:.02});Object.assign(g.enemy,{x:126,y:62,elevation:4.68,angle:Math.PI,motion:0});game.cartography.update(true);game.renderer.render(g,0);}''')
- p.wait_for_timeout(100);p.screenshot(path=str(OUT/'relief-live.png'))
+ p.wait_for_timeout(100);p.screenshot(path=str(OUT/'crawler-live.png'))
  assert p.evaluate('game.renderer.pursuerMeshes.body.count>0&&game.renderer.gl.getError()===0')
  p.evaluate('game.state.mode="playing";game.save();game.home()');click(p,'#continue-game');click(p,'#chapter-next')
  assert p.evaluate('game.state.charted.length')>initial
  # Contact triggers a short face overlay followed by recovery; progress is preserved.
  p.evaluate('''()=>{const g=game.state;g.levelElapsed=30;Object.assign(g.enemy,{x:g.player.x,y:g.player.y,elevation:g.player.elevation});game.pursuer.update(.01);}''')
- assert p.locator('#scare').is_visible();p.screenshot(path=str(OUT/'relief-scare.png'));p.wait_for_function('game.state.mode==="caught"')
+ assert p.locator('#scare').is_visible();p.screenshot(path=str(OUT/'crawler-scare.png'));p.wait_for_function('game.state.mode==="caught"')
  click(p,'#ending-restart');assert p.evaluate('game.state.mode==="playing"&&game.state.levelElapsed<1')
  p.evaluate('''()=>{WZ.settings.shocks=false;const g=game.state;g.levelElapsed=30;Object.assign(g.enemy,{x:g.player.x,y:g.player.y,elevation:g.player.elevation});game.pursuer.update(.01);}''')
  assert p.evaluate('game.state.mode==="caught"');assert p.locator('#scare').is_hidden();click(p,'#ending-restart')

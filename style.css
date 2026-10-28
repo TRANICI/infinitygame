@@ -85,3 +85,37 @@ button:focus-visible,input:focus-visible{outline:2px solid #e0be88;outline-offse
 .vignette{opacity:.5;box-shadow:inset 0 0 130px #0006}
 .micro{color:#96a589}.primary{background:#bdc6a6}.primary:hover{background:#d5ddc3}
 @media(max-width:600px){.hud-top{top:14px}.hud-bottom{bottom:20px}.objective{top:116px;max-width:calc(100vw - 40px)}}
+
+/* Mobile always uses logical landscape dimensions, including portrait browsers. */
+.mobile-landscape #app{position:fixed;contain:layout paint;width:var(--game-width);height:var(--game-height);--edge-left:max(16px,env(safe-area-inset-left));--edge-right:max(16px,env(safe-area-inset-right))}
+.viewport-rotated #app{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);--edge-left:max(16px,env(safe-area-inset-top));--edge-right:max(16px,env(safe-area-inset-bottom))}
+.mobile-landscape .hud-top{top:12px;left:var(--edge-left);right:var(--edge-right);flex-wrap:nowrap;gap:10px}
+.mobile-landscape .hud-identity span,.mobile-landscape .hud-help{display:none}
+.mobile-landscape .hud-top #area-name{flex-basis:auto;font-size:9px;letter-spacing:1px}
+.mobile-landscape .hud-top button{min-width:38px;min-height:36px;padding:8px 10px;font-size:10px}
+.mobile-landscape .objective{top:65px;left:var(--edge-left);max-width:250px}
+.mobile-landscape #objective-text{font-size:11px}.mobile-landscape #fuse-progress{margin-top:8px}
+.mobile-landscape .hud-bottom{bottom:12px;left:var(--edge-left);right:var(--edge-right);font-size:9px}
+.mobile-landscape #torch-state{margin-right:0}.mobile-landscape #torch-state kbd{display:none}
+.mobile-landscape #touch-move{width:100px;height:100px;left:calc(var(--edge-left) + 12px);bottom:50px}
+.mobile-landscape #touch-move span{left:30px;top:30px}
+.mobile-landscape .touch-actions{right:calc(var(--edge-right) + 8px);bottom:48px;grid-template-columns:repeat(3,48px);gap:10px}
+.mobile-landscape .touch-actions button{width:48px;height:48px}
+.mobile-landscape #subtitle{bottom:12%;width:52%;font-size:11px;padding:4px}
+.mobile-landscape #danger-label{top:65px;bottom:auto;right:var(--edge-right);max-width:45%;font-size:10px}
+.mobile-landscape .modal-screen{padding:12px;place-items:center}
+.mobile-landscape .modal,.mobile-landscape .modal.compact,.mobile-landscape .puzzle-panel,.mobile-landscape .map-panel,.mobile-landscape .note-paper{max-height:calc(var(--game-height) - 24px);overflow-y:auto;padding:24px}
+.mobile-landscape #map-canvas{max-height:calc(var(--game-height) * .54)}
+.mobile-landscape .map-rooms{grid-template-columns:repeat(4,1fr)}
+.mobile-landscape .masthead{top:18px;left:6%;right:6%}.mobile-landscape .identity-mark{width:30px;height:34px;font-size:25px}
+.mobile-landscape .hero{top:21%;left:8%;width:44%;max-width:340px}
+.mobile-landscape h1{font-size:48px;margin:12px 0 4px}
+.mobile-landscape .english-title{font-size:9px;margin:0 0 8px}
+.mobile-landscape .story{font-size:11px;line-height:1.7;margin:8px 0 12px;letter-spacing:1px}
+.mobile-landscape .primary{min-height:42px}.mobile-landscape .secondary-actions{margin-top:6px;gap:18px}
+.mobile-landscape .secondary-actions button{font-size:10px}.mobile-landscape .best-record{display:none}
+.mobile-landscape .continue-link{padding-top:5px}.mobile-landscape .home-footer{bottom:10px;padding-top:8px}
+.mobile-landscape .scene-caption,.mobile-landscape .coordinate{display:none}
+.mobile-compact .hero{top:18%}.mobile-compact h1{font-size:38px;margin:6px 0}
+.mobile-compact .english-title,.mobile-compact .home-footer{display:none}
+.mobile-compact .story{margin:6px 0 10px}.mobile-compact .hero .eyebrow{font-size:8px}

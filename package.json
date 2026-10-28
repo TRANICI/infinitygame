@@ -1,11 +1,11 @@
 {
   "name": "ward-zero",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "零号病区：第一人称庭院、档案迷宫与解谜探索",
   "scripts": {
     "start": "node server.cjs",
-    "check": "node --check dust2-layout.js && node --check dust2-scene.js && node --check dust2-architecture.js && node --check annex.js && node --check courtyard-rooms.js && node --check interactions.js && node --check investigation.js && node --check terrain.js && node --check core.js && node --check audio.js && node --check renderer.js && node --check atmosphere.js && node --check cartography.js && node --check scare.js && node --check relief-model.js && node --check pursuer.js && node --check world3d.js && node --check input.js && node --check game.js && node --check server.cjs",
+    "check": "node --check dust2-layout.js && node --check dust2-scene.js && node --check dust2-architecture.js && node --check annex.js && node --check courtyard-rooms.js && node --check interactions.js && node --check investigation.js && node --check terrain.js && node --check core.js && node --check audio.js && node --check renderer.js && node --check atmosphere.js && node --check cartography.js && node --check scare.js && node --check stalker-model.js && node --check pursuer.js && node --check world3d.js && node --check viewport.js && node --check input.js && node --check game.js && node --check server.cjs",
     "test": "node tests/routes.cjs && node tests/elevation.cjs && node tests/fall-collision.cjs && node tests/jump.cjs && node tests/annex.cjs && node tests/expansion.cjs && node tests/courtyard-rooms.cjs && node tests/fieldwork.cjs && node tests/pursuit.cjs",
     "build": "node scripts/build-site.cjs"
   },

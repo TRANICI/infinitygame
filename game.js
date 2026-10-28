@@ -57,6 +57,7 @@ const game=(()=>{
     loadLevel(index,restored);show('hud',false);chapterIntro();save();
   }
   function enterChapter(){
+    audio.unlock();
     show('chapter-screen',false);if(nextLevel!==null){const index=nextLevel;loadLevel(index);}
     show('hud');show('touch-controls',isTouch);setMode('playing');save();lock();subtitle(state.power?investigation.objective():WZ.level.objective+'。TAB 查看地图，J 整理线索。',6);
   }
@@ -70,7 +71,7 @@ const game=(()=>{
     save();unlock();hidePanels();show('home');show('hud',false);setMode('home');state.started=false;WZ.loadLevel(0);state.level=0;state.objects=WZ.createObjects();Object.assign(state.player,{torch:true,hidden:false});investigation.reset(null);interactions.reset(null);renderer.makeTextures();nextLevel=null;updateHome();
   }
   function pause(){if(state.mode!=='playing')return;save();setMode('paused');show('pause');unlock();}
-  function resume(){show('pause',false);setMode('playing');lock();}
+  function resume(){audio.unlock();show('pause',false);setMode('playing');lock();}
   function restart(){loadLevel(state.level);hidePanels();show('hud');show('touch-controls',isTouch);setMode('playing');save();lock();subtitle('回到值班入口了。先看路线卡，别急着签任何东西。');}
   function recover(){show('ending',false);resetPlayer();show('hud');setMode('playing');save();lock();subtitle('回到入口了。背包和调查记录都还在。');}
   function openSettings(){settingsOrigin=state.mode;if(state.mode==='playing')pause();show('settings');setMode('settings');unlock();}
@@ -192,6 +193,9 @@ update(dt);renderer.render(state,now/1000);requestAnimationFrame(frame);}
   for(const name of['volume','brightness','sensitivity']){const el=$(name);el.value=WZ.settings[name];$(name+'-value').textContent=el.value+'%';el.oninput=()=>{WZ.settings[name]=Number(el.value);$(name+'-value').textContent=el.value+'%';applySettings();};}
   $('grain-toggle').checked=WZ.settings.grain;$('grain-toggle').onchange=e=>{WZ.settings.grain=e.target.checked;applySettings();};
   for(const name of ['shocks','grisly','reducedMotion']){$(name+'-toggle').checked=WZ.settings[name];$(name+'-toggle').onchange=e=>{WZ.settings[name]=e.target.checked;applySettings();};}
+  $('audio-test').onclick=async()=>{const ok=await audio.preview();$('audio-status').textContent=!ok?'点击后仍未播放，请检查浏览器的声音权限。':WZ.settings.volume===0?'当前音量为 0，请调高后再试听。':'已播放左右两次脚步声。';};
+  // Trusted gestures resume audio after mobile interruptions or autoplay blocking.
+  for(const event of['pointerdown','keydown'])document.addEventListener(event,e=>{if(e.isTrusted)audio.unlock();},{capture:true});
   window.addEventListener('keydown',e=>{
     if(e.target instanceof HTMLInputElement){if(e.code==='Escape'){e.preventDefault();if(state.mode==='puzzle')investigation.close();else if(state.mode==='settings')closeSettings();}return;}
     if(['Tab','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)||(state.mode==='playing'&&['KeyW','KeyA','KeyS','KeyD','ControlLeft','ControlRight'].includes(e.code)))e.preventDefault();
@@ -210,12 +214,13 @@ update(dt);renderer.render(state,now/1000);requestAnimationFrame(frame);}
   document.addEventListener('mousemove',e=>{if(state.mode==='playing'&&document.pointerLockElement===$('world'))viewInput.mouse(e.movementX,e.movementY,e.timeStamp);});
   $('world').style.touchAction='none';
   $('world').onpointerdown=e=>{if(state.mode!=='playing')return;if(e.pointerType==='touch'){drag={id:e.pointerId,x:e.clientX,y:e.clientY};$('world').setPointerCapture(e.pointerId);}else lock();};
-  $('world').onpointermove=e=>{if(drag&&drag.id===e.pointerId&&state.mode==='playing'){viewInput.add((e.clientX-drag.x)*1.5,(e.clientY-drag.y)*1.5);drag.x=e.clientX;drag.y=e.clientY;}};
+  $('world').onpointermove=e=>{if(drag&&drag.id===e.pointerId&&state.mode==='playing'){const d=WardViewport.delta(e.clientX-drag.x,e.clientY-drag.y);viewInput.add(d.x*1.5,d.y*1.5);drag.x=e.clientX;drag.y=e.clientY;}};
   $('world').onpointerup=$('world').onpointercancel=()=>drag=null;
   const stick=$('touch-move');let stickId=null;
-  function stickMove(e){const r=stick.getBoundingClientRect(),x=WZ.clamp((e.clientX-r.left-r.width/2)/40,-1,1),y=WZ.clamp((e.clientY-r.top-r.height/2)/40,-1,1);touch.strafe=x;touch.forward=-y;stick.firstElementChild.style.transform='translate('+(x*28)+'px,'+(y*28)+'px)';}
+  function stickMove(e){const r=stick.getBoundingClientRect(),d=WardViewport.delta(e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2),x=WZ.clamp(d.x/40,-1,1),y=WZ.clamp(d.y/40,-1,1);touch.strafe=x;touch.forward=-y;stick.firstElementChild.style.transform='translate('+(x*28)+'px,'+(y*28)+'px)';}
   stick.onpointerdown=e=>{if(state.mode!=='playing')return;stickId=e.pointerId;stick.setPointerCapture(e.pointerId);stickMove(e);};stick.onpointermove=e=>{if(stickId===e.pointerId)stickMove(e);};stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=()=>{stickId=null;touch.forward=touch.strafe=0;stick.firstElementChild.style.transform='';};
   document.querySelectorAll('[data-action]').forEach(b=>{const action=b.dataset.action;b.onpointerdown=e=>{e.preventDefault();if(state.mode!=='playing')return;if(action==='sprint'){touch.sprint=true;b.setPointerCapture(e.pointerId);}else if(action==='interact')interact();else if(action==='torch')torch();else if(action==='jump')WZ.jump(state.player);else if(action==='map')toggleMap();else if(action==='crouch'){touch.crouch=!touch.crouch;b.classList.toggle('active',touch.crouch);}};if(action==='sprint')b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>touch.sprint=false;});
+  document.addEventListener('wardviewportchange',()=>{if(isTouch)unlock();});
   window.addEventListener('pagehide',save);document.addEventListener('contextmenu',e=>e.preventDefault());investigation.reset(null);interactions.reset(null);applySettings();updateHome();requestAnimationFrame(frame);
   return{state,renderer,audio,pursuer,cartography,investigation,interactions,input:viewInput,start,pause,resume,home,interact,toggleMap,formatTime,save};
 })();

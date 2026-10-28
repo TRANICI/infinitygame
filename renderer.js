@@ -4,7 +4,7 @@ class WardLegacyRenderer{
     this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.floor=document.createElement('canvas');this.fctx=this.floor.getContext('2d',{alpha:false});this.textures=[];this.sprites={};this.shades={};this.makeTextures();this.makeSprites();this.resize();
     window.addEventListener('resize',()=>this.resize());
   }
-  resize(){const w=Math.max(320,Math.min(800,Math.round(innerWidth*.58/2)*2));this.w=this.canvas.width=w;this.h=this.canvas.height=Math.round(w*innerHeight/innerWidth);this.floor.width=Math.ceil(w/2);this.floor.height=Math.ceil(this.h/2);this.floorData=this.fctx.createImageData(this.floor.width,this.floor.height);this.z=new Float32Array(w);this.focal=w/1.38;}
+  resize(){const{width,height}=WardViewport.size,w=Math.max(320,Math.min(800,Math.round(width*.58/2)*2));this.w=this.canvas.width=w;this.h=this.canvas.height=Math.round(w*height/width);this.floor.width=Math.ceil(w/2);this.floor.height=Math.ceil(this.h/2);this.floorData=this.fctx.createImageData(this.floor.width,this.floor.height);this.z=new Float32Array(w);this.focal=w/1.38;}
   makeTextures(){
     const theme=WZ.level.theme,rand=WZ.random(9709+WZ.levelIndex);
     const pal={yellow:['#e8dcb1','#c9b780','#a38d58'],pool:['#d7f0ef','#a7d5dc','#7bb0bd'],play:['#f1dfe2','#b5ccd1','#92aeb9'],station:['#e3e9e5','#b0c3c6','#8da4ae']}[theme];
@@ -25,13 +25,10 @@ class WardLegacyRenderer{
     this.shades[name]=Array.from({length:8},(_,i)=>{const v=document.createElement('canvas');v.width=w;v.height=h;const x=v.getContext('2d');x.drawImage(c,0,0);x.globalCompositeOperation='source-atop';x.fillStyle='rgba(1,9,4,'+(1-(i+1)/8)+')';x.fillRect(0,0,w,h);return v;});
   }
   makeSprites(){
-    this.sprite('enemy',160,256,x=>{
-      x.fillStyle='#263631';x.beginPath();x.moveTo(48,79);x.lineTo(104,76);x.lineTo(116,196);x.lineTo(46,202);x.closePath();x.fill();
-      x.fillStyle='#1a2825';x.fillRect(56,192,14,64);x.fillRect(89,192,14,64);
-      x.strokeStyle='#34433b';x.lineWidth=13;x.beginPath();x.moveTo(47,86);x.lineTo(34,145);x.lineTo(31,205);x.moveTo(111,83);x.lineTo(122,148);x.lineTo(127,207);x.stroke();
-      x.strokeStyle='#899480';x.lineWidth=6;x.beginPath();x.moveTo(31,160);x.lineTo(27,217);x.moveTo(125,161);x.lineTo(131,220);x.stroke();
-      const face=document.createElement('canvas');face.width=face.height=128;WardRelief.mask(face.getContext('2d'));x.drawImage(face,43,0,73,82);
-      x.fillStyle='#a49c7a';for(let i=0;i<3;i++)x.fillRect(69+i%2*3,100+i*13,13,18);
+    this.sprite('enemy',192,160,x=>{
+      x.fillStyle='#52604a';x.beginPath();x.ellipse(96,65,55,53,0,0,WZ.TAU);x.fill();
+      x.strokeStyle='#708067';x.lineWidth=14;for(const side of[-1,1])for(const fore of[-1,1]){x.beginPath();x.moveTo(96+side*36,60);x.lineTo(96+side*70,91+fore*8);x.lineTo(96+side*79,145+fore*8);x.stroke();}
+      const face=document.createElement('canvas');face.width=face.height=128;WardStalker.face(face.getContext('2d'),128);x.drawImage(face,42,43,108,100);
     });
     this.sprite('ticket',100,144,x=>{x.fillStyle='#e4c16a';x.fillRect(21,27,58,91);x.fillStyle='#fff4cb';x.fillRect(26,32,48,81);x.fillStyle='#a78b4c';x.font='bold 20px monospace';x.textAlign='center';x.fillText('017',50,73);x.font='8px monospace';x.fillText('TAKE ME HOME',50,97);x.fillRect(32,43,36,2);});
     this.sprite('photo',100,120,x=>{x.save();x.translate(50,60);x.rotate(-.12);x.fillStyle='#fff7e6';x.fillRect(-36,-45,72,93);x.fillStyle='#b4d1de';x.fillRect(-30,-39,60,60);x.fillStyle='#f0d486';x.beginPath();x.arc(12,-23,9,0,WZ.TAU);x.fill();x.fillStyle='#a2bd90';x.beginPath();x.moveTo(-30,21);x.lineTo(-6,-14);x.lineTo(30,21);x.fill();x.fillStyle='#d699a4';x.fillRect(-15,30,30,3);x.restore();});
@@ -91,7 +88,7 @@ class WardLegacyRenderer{
       const wallH=f/dist,top=horizon-wallH*(1-eye),texture=this.textures[Math.abs(mx*3+my*7)%this.textures.length];
       c.drawImage(texture,tx,0,1,128,x,top,2,wallH);const li=this.light(dist,nx,px+rx*dist,py+ry*dist,g)*(side?.94:1);c.fillStyle='rgba(2,9,6,'+(1-li)+')';c.fillRect(x,top,2,wallH+.5);
     }
-    const entities=g.objects.filter(o=>!o.taken&&!(o.activated&&(['gate','room-door'].includes(o.type)||o.type==='field'&&['window','barricade','motor'].includes(o.kind))));if(g.pursuerEnabled&&!home&&g.levelElapsed>=12)entities.push({...g.enemy,type:'enemy',height:2.5,scale:.8});const visible=entities;
+    const entities=g.objects.filter(o=>!o.taken&&!(o.activated&&(['gate','room-door'].includes(o.type)||o.type==='field'&&['window','barricade','motor'].includes(o.kind))));if(g.pursuerEnabled&&!home&&g.levelElapsed>=12)entities.push({...g.enemy,type:'enemy',height:1.35,scale:1.1});const visible=entities;
     visible.sort((a,b)=>(b.x-px)**2+(b.y-py)**2-(a.x-px)**2-(a.y-py)**2);
     for(const obj of visible){
       const xx=obj.x-px,yy=obj.y-py,z=xx*dx+yy*dy;if(z<.16)continue;

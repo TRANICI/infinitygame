@@ -17,23 +17,23 @@ with sync_playwright() as pw:
     # Inspect the actual mesh data before upload: every component must be finite,
     # fit a doorway vertically, and remain bounded even while animated.
     report=p.evaluate('''()=>{
-      const r=game.renderer,parts=WardRelief.meshes({tiles:r.tiles,upload:m=>m.data});
+      const r=game.renderer,parts=WardStalker.meshes({tiles:r.tiles,upload:m=>m.data});
       let count=0;for(const data of Object.values(parts)){if(!data.length||!data.every(Number.isFinite))throw Error('invalid mesh');count+=data.length/13;}
       const g=game.state;g.mode='preview';g.levelElapsed=30;
       Object.assign(g.player,{x:126,y:57.5,elevation:4.68,eyeElevation:4.68,angle:Math.PI/2,pitch:0});
       Object.assign(g.enemy,{x:126,y:62,elevation:4.68,angle:Math.PI,motion:2.25});
       const draw=r.draw;let low=Infinity,high=-Infinity,maxRadius=0;
       r.draw=(data,m)=>{for(let i=0;i<data.length;i+=13){const x=data[i],y=data[i+1],z=data[i+2],wx=m[0]*x+m[4]*y+m[8]*z+m[12],wy=m[1]*x+m[5]*y+m[9]*z+m[13],wz=m[2]*x+m[6]*y+m[10]*z+m[14];low=Math.min(low,wy-4.68);high=Math.max(high,wy-4.68);maxRadius=Math.max(maxRadius,Math.hypot(wx-126,wz-62));}};
-      r.pursuerMeshes=parts;for(let i=0;i<24;i++){g.enemy.phase=i*Math.PI/12;WardRelief.draw(r,g,i/4);}
+      r.pursuerMeshes=parts;for(let i=0;i<24;i++){g.enemy.phase=i*Math.PI/12;WardStalker.draw(r,g,i/4);}
       r.draw=draw;r.pursuerMeshes=null;r.render(g,0);const cached=r.pursuerMeshes;r.render(g,1);
       return {count,low,high,maxRadius,cached:cached===r.pursuerMeshes};
     }''')
     assert 1000<report['count']<12000,report
-    assert report['low']>-.04 and 2.2<report['high']<2.55 and report['maxRadius']<.8,report
+    assert report['low']>-.04 and 1.2<report['high']<1.5 and report['maxRadius']<.95,report
     assert report['cached'],report
     for name,angle,phase in [('front',3.14159,0),('profile',1.5708,1.2),('back',0,2.8)]:
         p.evaluate('v=>{Object.assign(game.state.enemy,v);game.renderer.render(game.state,0)}',{'angle':angle,'phase':phase})
-        p.screenshot(path=str(OUT/f'relief-v2-{name}.png'))
+        p.screenshot(path=str(OUT/f'crawler-{name}.png'))
     p.evaluate('game.state.mode="playing";game.state.levelElapsed=0')
     click(p,'#pause-button');click(p,'#pause-settings')
     p.locator('#reducedMotion-toggle').check()

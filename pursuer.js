@@ -1,5 +1,5 @@
 "use strict";
-// The Relief: visible, physical pursuit. Losing sight never reveals a hidden player's new position.
+// The Crawler: visible, physical pursuit. Losing sight never reveals a hidden player's new position.
 class WardPursuer{
   constructor(state,hooks){this.s=state;this.h=hooks;}
   update(dt){
@@ -13,7 +13,7 @@ class WardPursuer{
     const sees=!p.hidden&&visible&&dist<(p.torch?15:p.crouch?4:8),hears=!p.hidden&&sameFloor&&s.moveAmount>1.1&&dist<11&&WZ.lineOfSight(e,p);
     e.voiceTimer=Math.max(0,(e.voiceTimer||0)-dt);
     if(sees||hears){
-      if(e.mode!=='chase'){s.chases++;e.path=[];e.repath=0;if(!e.voiceTimer){this.h.subtitle?.('代班者：“你先别走。签个字，就一个。”',5);this.h.audio?.whisper?.(Math.sin(Math.atan2(e.y-p.y,e.x-p.x)-p.angle));e.voiceTimer=18;}}
+      if(e.mode!=='chase'){s.chases++;e.path=[];e.repath=0;if(!e.voiceTimer){this.h.subtitle?.('地上有东西追过来了。先转角，别停在亮处。',5);this.h.audio?.whisper?.(Math.sin(Math.atan2(e.y-p.y,e.x-p.x)-p.angle));e.voiceTimer=18;}}
       e.mode='chase';e.memory=7;e.target={x:p.x,y:p.y,elevation:p.elevation};e.lureTime=0;
     }else if(e.mode==='chase'){
       e.memory-=dt;if(e.memory<=0){e.mode='search';e.searchTime=5;e.path=[];e.repath=0;}
@@ -43,12 +43,12 @@ class WardPursuer{
     e.stuck=point&&moved<.001?(e.stuck||0)+dt:0;
     if(e.stuck>1){e.path=[];e.repath=0;e.stuck=0;if(e.mode==='patrol')e.target=null;}
     e.stepTimer=(e.stepTimer||0)-dt;
-    if(moved>.001&&e.stepTimer<=0){e.stepTimer=e.mode==='chase'?.34:.74;if(dist<18)this.h.audio?.enemyStep?.(Math.sin(Math.atan2(e.y-p.y,e.x-p.x)-p.angle),Math.max(0,1-dist/18)*(visible?1:.28));}
-    this.h.danger?.(visible&&dist<12,e.mode==='chase'?'代班者看见你了 · 转角断开视线':'它在前面。别一直盯着看。');
+    if(moved>.001&&e.stepTimer<=0){e.stepTimer=e.mode==='chase'?.34:.74;if(dist<22)this.h.audio?.enemyStep?.(Math.sin(Math.atan2(e.y-p.y,e.x-p.x)-p.angle),Math.pow(Math.max(0,1-dist/22),1.25)*(visible?1:.5));}
+    this.h.danger?.(visible&&dist<12,e.mode==='chase'?'伏行者发现你了 · 转角断开视线':'它在前面。别一直盯着看。');
     this.h.audio?.tension?.(s.stress,dt);
-    if(watched&&s.stress>.8&&!e.stressSpoken){e.stressSpoken=true;this.h.subtitle?.('“别看脸。看工牌。工牌上不是写着呢吗？”',5);this.h.audio?.whisper?.(0);}
+    if(watched&&s.stress>.8&&!e.stressSpoken){e.stressSpoken=true;this.h.subtitle?.('它贴着地面抬起了头。别盯着那个黑洞。',5);this.h.audio?.whisper?.(0);}
     if(s.stress<.2)e.stressSpoken=false;
     if(visible&&!p.hidden&&dist<.7&&Math.abs((e.elevation||0)-(p.elevation||0))<1)this.h.caught?.();
   }
-  static draw(renderer,g,time){WardRelief.draw(renderer,g,time);}
+  static draw(renderer,g,time){WardStalker.draw(renderer,g,time);}
 }

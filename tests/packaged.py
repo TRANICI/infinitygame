@@ -8,6 +8,7 @@ import sys
 import threading
 
 ROOT=Path(__file__).resolve().parents[1]
+assert not (ROOT/'dist'/'relief-model.js').exists(),'retired pursuer must not ship'
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if not self.path.startswith('/infinitygame/'):
@@ -20,7 +21,7 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'d
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
     env=dict(os.environ,WARD_TEST_URL=f'http://127.0.0.1:{server.server_port}/infinitygame/index.html')
-    suites=['room-ui.py','horror-ui.py','pursuit-ui.py','polish-ui.py']
+    suites=['room-ui.py','horror-ui.py','pursuit-ui.py','polish-ui.py','landscape-ui.py','audio-ui.py']
     for suite in suites:
         result=subprocess.run([sys.executable,str(ROOT/'tests'/suite)],env=env,cwd=ROOT)
         if result.returncode:break

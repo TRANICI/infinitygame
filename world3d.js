@@ -96,7 +96,7 @@ class WardRenderer {
     for(const[type,source]of[[gl.VERTEX_SHADER,vs],[gl.FRAGMENT_SHADER,fs]]){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));gl.attachShader(p,s);}
     gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;
   }
-  resize(){const ratio=Math.min(.75,800/innerWidth);this.w=this.canvas.width=Math.max(240,Math.round(innerWidth*ratio));this.h=this.canvas.height=Math.round(this.w*innerHeight/innerWidth);this.gl.viewport(0,0,this.w,this.h);}
+  resize(){const{width,height}=WardViewport.size,ratio=Math.min(.75,800/width);this.w=this.canvas.width=Math.max(240,Math.round(width*ratio));this.h=this.canvas.height=Math.round(this.w*height/width);this.gl.viewport(0,0,this.w,this.h);}
   makeTextures(){
     this.assets.makeTextures();const atlas=document.createElement('canvas');
     // Reserve space for room signs and controls as the level grows.
@@ -126,9 +126,7 @@ class WardRenderer {
     tile('wood',x=>{x.fillStyle='#bcaa82';x.fillRect(0,0,128,128);x.strokeStyle='#9e8d69';for(let i=0;i<128;i+=16){x.strokeRect(i,0,16,128);}x.strokeStyle='#ddd0a5';x.lineWidth=8;x.strokeRect(5,5,118,118);});
     tile('metal',x=>{x.fillStyle='#a5bab0';x.fillRect(0,0,128,128);x.strokeStyle='#c9d6c7';x.strokeRect(3,3,122,122);});
     tile('curtain',x=>{x.fillStyle='#8a8a74';x.fillRect(0,0,128,128);const r=WZ.random(45);for(let i=0;i<1500;i++){x.fillStyle=i%3?'#17201c13':'#5c43222b';x.fillRect(r()*128,r()*128,1+r()*12,1+r()*25);}for(let i=0;i<128;i+=9){x.fillStyle='#151e191c';x.fillRect(i,0,3,128);}x.strokeStyle='#303a2966';x.lineWidth=2;x.beginPath();x.moveTo(19,17);x.lineTo(25,53);x.lineTo(21,85);x.stroke();});
-    tile('relief-mask',x=>WardRelief.mask(x));
     tile('ward-cross',x=>{x.clearRect(0,0,128,128);x.fillStyle='#314f40';x.fillRect(48,16,32,96);x.fillRect(16,48,96,32);});
-    tile('staff-badge',x=>{x.fillStyle='#baad8c';x.fillRect(0,0,128,128);x.fillStyle='#292d27';x.fillRect(16,18,34,45);x.font='bold 17px sans-serif';x.fillText('林秋',58,43);x.font='13px monospace';x.fillText('0217',20,88);x.strokeStyle='#564735';x.strokeRect(7,6,114,116);});
     tile('stain',x=>{x.clearRect(0,0,128,128);x.fillStyle='#932f20';x.beginPath();x.moveTo(20,8);x.lineTo(70,18);x.lineTo(103,43);x.lineTo(83,59);x.lineTo(92,96);x.lineTo(56,82);x.lineTo(39,121);x.lineTo(30,69);x.lineTo(8,56);x.closePath();x.fill();for(let n=0;n<4;n++)x.fillRect(35+n*11,3+n*4,5,36);});
     if(WZ.levelIndex===0){
       for(const detail of DUST2_SCENE.scenery.filter(o=>o.type==='board'))tile('board-'+detail.id,x=>{
