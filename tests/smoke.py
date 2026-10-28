@@ -1,4 +1,4 @@
-"""Four-chapter gameplay and mouse regression suite. python tests/smoke.py"""
+"""Single-level gameplay and mouse regression suite. python tests/smoke.py"""
 from pathlib import Path
 import json
 import os
@@ -54,22 +54,14 @@ with sync_playwright() as pw:
     page.on("request",lambda r:requests.append(r.url))
     page.goto(BASE);page.wait_for_load_state("networkidle")
     check("offline home loads",page.locator("#start").is_visible())
-    check("four selectable chapters",page.locator(".chapter-card").count()==4)
-    check("all four maps have reachable objectives and patrols",page.evaluate("""()=>{
-      const fingerprints=[];
-      for(let i=0;i<4;i++){
-        const level=WZ.loadLevel(i),objects=WZ.createObjects();
-        if(!WZ.canStand(level.start.x,level.start.y)||!WZ.canStand(level.enemy.x,level.enemy.y))return false;
-        for(const o of [...objects.filter(o=>o.label),...level.patrol])if(!WZ.findPath(level.start,o).length&&WZ.distance(level.start,o)>.1)return false;
-        for(const o of objects.filter(o=>o.label)){
-          if(![[0,.9],[0,-.9],[.9,0],[-.9,0]].some(([x,y])=>WZ.canStand(o.x+x,o.y+y)))return false;
-        }
-        fingerprints.push(JSON.stringify(WZ.cells));
-      }
-      WZ.loadLevel(0);return new Set(fingerprints).size===4;
+    check("one selectable chapter",page.locator(".chapter-card").count()==1)
+    check("courtyard objectives and patrols reachable",page.evaluate("""()=>{
+      const objects=game.state.objects;
+      const annexIds=new Set([...DUST2_ANNEX.objects,...DUST2_ROOMS.objects].map(o=>o.id));
+      return [...objects.filter(o=>o.label&&!annexIds.has(o.id)),...WZ.level.patrol].every(o=>WZ.findPath(WZ.level.start,o).length>0);
     }"""))
     page.screenshot(path=str(OUT/"01-home.png"))
-    page.click("#help-open");check("gentle instructions", "没有贴脸惊吓" in page.locator(".content-note").inner_text());page.keyboard.press("Escape")
+    page.click("#help-open");check("night shift instructions", "追逐" in page.locator(".content-note").inner_text());page.keyboard.press("Escape")
     page.click("#settings-open")
     page.locator("#volume").evaluate("e=>{e.value=0;e.dispatchEvent(new Event('input'));}")
     page.click("#settings-done");page.reload();page.wait_for_load_state("networkidle")
@@ -141,7 +133,15 @@ with sync_playwright() as pw:
 
     place(page,"locker-0");page.keyboard.press("e");check("hide",page.evaluate("game.state.player.hidden"))
     page.keyboard.press("e");check("leave hiding",page.evaluate("!game.state.player.hidden"))
-    for level in range(4):
+    for name in ["garden","radio","cafe"]:
+        place(page,"memory-"+name);page.keyboard.press("e")
+        check("optional memory "+name,page.evaluate("game.state.mode==='note'") and "归途明信片" in page.locator("#note-title").inner_text())
+        page.keyboard.press("e")
+    check("three memories complete without changing main quest",page.evaluate("game.state.fuses===0&&game.state.objects.filter(o=>o.type==='memory'&&o.activated).length===3"))
+    check("optional progress shown", "已拼好" in page.locator("#explore-progress").inner_text())
+    place(page,"memory-garden");page.keyboard.press("e");page.keyboard.press("e")
+    check("revisiting a memory does not duplicate progress",page.evaluate("WZ.storage.get('progress.v2',{}).memories.length===3"))
+    for level in range(1):
         check(f"chapter {level+1} active",page.evaluate("game.state.level")==level)
         page.evaluate("Object.assign(game.state.player,WZ.level.start,{pitch:0,torch:true,elevation:WZ.groundHeight(WZ.level.start.x,WZ.level.start.y),eyeElevation:WZ.groundHeight(WZ.level.start.x,WZ.level.start.y)});game.state.levelElapsed=0")
         page.screenshot(path=str(OUT/f"chapter-{level+1}.png"))
@@ -167,25 +167,26 @@ with sync_playwright() as pw:
                 page.keyboard.press("Escape");page.click("#return-home")
                 check("continue appears",page.locator("#continue-game").is_visible())
                 page.click("#continue-game");page.click("#chapter-next")
+                check("save preserves optional memories",page.evaluate("game.state.objects.filter(o=>o.type==='memory'&&o.activated).length===3"))
                 check("save preserves collected item",page.evaluate("game.state.fuses===1&&game.state.objects.find(o=>o.id==='item-1').taken"))
         if level==0:
             page.evaluate("game.state.levelElapsed=20;game.state.enemy.x=game.state.player.x;game.state.enemy.y=game.state.player.y-.1;game.state.enemy.elevation=game.state.player.elevation")
             page.wait_for_function("game.state.mode==='caught'")
-            check("friendly capture without death",page.locator("#ending-title").inner_text()=="团子找到你啦。")
+            check("capture returns to entrance",page.locator("#ending-title").inner_text()=="你被带回了入口。")
             page.click("#ending-restart")
             check("capture preserves inventory",page.evaluate("game.state.fuses===3&&game.state.mode==='playing'"))
-        place(page,"station");page.keyboard.press("e");check(f"chapter {level+1} opens route",page.evaluate("game.state.power"))
+        place(page,"station");page.keyboard.press("e");check("courtyard power authorizes investigation",page.evaluate("game.state.power"))
         place(page,"exit");page.keyboard.press("e")
-        if level<3:
-            check(f"chapter {level+1} story transition",page.evaluate("game.state.mode==='chapter'"))
-            check(f"chapter {level+1} checkpoint advances",page.evaluate("WZ.storage.get('progress.v2',null).level")==level+1)
-            page.click("#chapter-next")
-    check("four-chapter ending",page.evaluate("game.state.mode==='won'&&game.state.cleared.length===4"))
+        check("courtyard exit still requires investigation",page.evaluate("game.state.mode==='playing'"))
+        # The dedicated investigation suite solves every mechanism through its UI.
+        page.evaluate("game.state.mission.broadcast=true;game.investigation.commit()")
+        place(page,"exit");page.keyboard.press("e")
+    check("single-level ending",page.evaluate("game.state.mode==='won'&&game.state.cleared.length===1"))
     check("completed checkpoint cleared",page.evaluate("WZ.storage.get('progress.v2',null)===null"))
-    check("best complete run saved",page.evaluate("WZ.storage.get('best.v2',null)!==null"))
+    check("best complete run saved",page.evaluate("WZ.storage.get('best.courtyard.v1',null)!==null"))
     page.screenshot(path=str(OUT/"ending.png"));page.click("#ending-home")
-    page.click("#chapters-open");page.locator(".chapter-card").nth(2).click();page.click("#chapter-next")
-    check("direct chapter selection",page.evaluate("game.state.level===2"))
+    page.click("#chapters-open");page.locator(".chapter-card").nth(0).click();page.click("#chapter-next")
+    check("only first chapter selectable",page.evaluate("game.state.level===0&&WZ.levels.length===1"))
     check("no runtime errors",not errors)
     check("no remote assets",all(url.startswith(("file:","data:",BASE.rsplit("/",1)[0]+"/")) for url in requests))
     mobile=browser.new_context(viewport={"width":390,"height":844},is_mobile=True,has_touch=True,device_scale_factor=1)

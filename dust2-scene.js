@@ -2,12 +2,41 @@
 // Pixel coordinates use the user's reference directly; north remains up.
 // The screenshot specifies the footprint. Heights below are playtest estimates.
 const DUST2_SCENE = {
-  start:[351,740], enemy:[189,188], station:[677,136], exit:[713,38], exitAngle:Math.PI/2,
+  start:[351,740], enemy:[469,722], station:[677,136], exit:[713,38], exitAngle:Math.PI/2,
   items:[[198,119],[399,394],[735,295]],
   lockers:[[316,764,-Math.PI/2],[99,203,0],[778,414,Math.PI]],
   notes:[[325,751],[166,362],[632,120]],
   patrol:[[190,188],[117,350],[174,492],[345,738],[469,722],[470,522],[408,393],[403,200],[534,183],[654,190],[738,290],[707,414],[589,521]],
-  labels:[['T 出生点',350,744],['T 斜坡',207,660],['上层隧道',174,538],['下层隧道',163,376],['B 区',195,123],['B 门',238,198],['CT 出生点',521,175],['中门',398,295],['中路',402,419],['T 中路',467,524],['A 小道',534,310],['A 区',679,154],['A 大道',743,326],['长门',588,529],['大坑',730,520]],
+  labels:[['值班入口',350,744],['遗忘花园',217,665],['苔阶',121,660],['旧转运道',174,538],['地下转运道',163,376],['候诊庭院',195,123],['隔离门',238,198],['救护庭院',521,175],['交接双门',398,295],['病历交接廊',402,419],['值班后巷',467,524],['高架连廊',534,310],['广播庭院',679,154],['门诊长街',743,326],['门诊旧门',588,529],['下沉卸货场',730,520]],
+  // Optional memories reward exploring the garden, radio corner and street café.
+  discoveries:[
+    {id:'garden',x:248,y:656,kind:'watering',label:'翻看花盆下的交接单',title:'交接单 · 后花园',text:'纸压在空花盆下面，底下已经长霉了。\n\n“我昨晚下班了。钥匙放门卫那儿了。要是还有人看见我，别叫我回去。\n我真下班了。你们不能天天这样。”\n\n签名：林秋。你不记得写过。'},
+    {id:'radio',x:459,y:204,kind:'radio',label:'播放广播台的录音',title:'交接单 · 广播台',text:'录音里是你自己的声音。\n\n“林秋到岗。林秋离岗。林秋到岗。\n等会儿，别放了，我还没走出去。谁又把开头按了一遍？”\n\n录音日期是今天。可你刚到。'},
+    {id:'cafe',x:671,y:438,kind:'stamp',label:'查看药房的签收单',title:'交接单 · 停业药房',text:'签收单上有小满的名字，签收人是你。\n\n背面写着：“哥，电话里那句话是以前录的。我早就回家了。\n别替里面那个签字。让它自己值班去。\n要是它说它也是你，你就问它我叫什么。别先告诉它。”'}
+  ],
+  // World-space metres for furniture sizes; x/y remain reference-image pixels.
+  scenery:[
+    {id:'garden-shade',type:'pergola',x:217,y:665,width:7.6,depth:4.8,bodyHeight:2.9,angle:Math.PI/2},
+    {id:'garden-bench',type:'bench',x:216,y:673,width:2.2,depth:.65,bodyHeight:1.08,angle:-Math.PI/2},
+    {id:'garden-planter-west',type:'planter',x:169,y:660,width:1.3,depth:2.3,bodyHeight:.65,angle:Math.PI/2},
+    {id:'garden-tree',type:'tree',x:269,y:650,width:1.3,depth:1.3,bodyHeight:.65,angle:0},
+    {id:'garden-planter-east',type:'planter',x:278,y:704,width:2.4,depth:1,bodyHeight:.65,angle:Math.PI/2},
+    {id:'garden-board',type:'board',x:195,y:705,width:2,depth:.25,bodyHeight:2.1,angle:Math.PI/2,text:'封院后第 217 天',sub:'每天都有人浇水',kind:'inspect',label:'调查 · 花园封院告示',title:'没有落款的封院告示',description:'告示说院区已停用 217 天。花坛的泥却还是湿的。浇水记录里，每一天都签着“林秋”，包括明天。'},
+    {id:'b-well',type:'well',x:154,y:213,width:2,depth:2,bodyHeight:.9,angle:Math.PI/2,kind:'inspect',label:'调查 · 封死的井口',title:'井里的候诊号',description:'井盖已经焊死。缝隙里却夹着一张刚打印的候诊号：你的名字，明天的日期。井壁传来的三声敲击，与你方才的脚步间隔完全相同。'},
+    {id:'b-planter',type:'planter',x:92,y:119,width:.8,depth:2.6,bodyHeight:.6,angle:Math.PI/2},
+    {id:'b-bench',type:'bench',x:211,y:160,width:2.3,depth:.65,bodyHeight:1.08,angle:Math.PI},
+    {id:'radio-bench',type:'bench',x:449,y:214,width:2,depth:.65,bodyHeight:1.08,angle:-Math.PI/2},
+    {id:'cafe-counter',type:'stall',x:658,y:409,width:4.2,depth:1.5,bodyHeight:1,angle:Math.PI/2},
+    {id:'cafe-table',type:'table',x:638,y:433,width:1.15,depth:1.15,bodyHeight:.78,angle:Math.PI/2},
+    {id:'cafe-chair-one',type:'chair',x:628,y:433,width:.6,depth:.6,bodyHeight:1,angle:0},
+    {id:'cafe-chair-two',type:'chair',x:648,y:433,width:.6,depth:.6,bodyHeight:1,angle:Math.PI},
+    {id:'cafe-tree',type:'tree',x:780,y:385,width:1.3,depth:1.3,bodyHeight:.65,angle:0},
+    {id:'cafe-board',type:'board',x:680,y:395,width:1.7,depth:.2,bodyHeight:2,angle:Math.PI/2,text:'停药窗口 / 请勿敲窗',sub:'处方人：林秋 / 02:17',kind:'inspect',label:'调查 · 药房停药单',title:'重复开出的处方',description:'窗口里的处方并没有药名，只有一句话：“请在听见第二次呼叫前离开。”纸张背面是六间附属房间的编号 R01–R06。'},
+    {id:'spawn-directory',type:'board',x:378,y:752,width:2.5,depth:.25,bodyHeight:2.1,angle:Math.PI/2,text:'← 地下转运道 / 门诊长街 →',sub:'禁止代签 · 门卫室在身后'},
+    {id:'tunnel-bench',type:'bench',x:111,y:550,width:2.2,depth:.65,bodyHeight:1.08,angle:0},
+    {id:'a-planter',type:'planter',x:747,y:64,width:1.4,depth:2.4,bodyHeight:.65,angle:Math.PI/2},
+    {id:'a-bench',type:'bench',x:685,y:53,width:2.4,depth:.65,bodyHeight:1.08,angle:Math.PI/2}
+  ],
   // x, y, width, depth, height, heading (local z/front), appearance.
   // Narrow permanent walls visible in the reference, separate from the voids.
   structures:[
@@ -15,7 +44,7 @@ const DUST2_SCENE = {
     [429,385,5,137,2.6,Math.PI/2,'wall'],
     [700,128,5,88,2.6,Math.PI/2,'wall'],
     [697,502,4,102,1.5,Math.PI/2,'wall'],
-    [151,658,5,94,1.4,Math.PI/2,'wall'],
+    [151,658,5,94,4.32,Math.PI/2,'retaining'],
     [383,704,169,5,1.4,Math.PI/2,'wall'],
     [168,495,134,5,.035,Math.PI/2,'step'],
     [760,495,5,85,1.4,Math.PI/2,'wall'],

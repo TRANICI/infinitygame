@@ -23,6 +23,19 @@ const architecture=vm.runInContext(`(()=>{
      low[n]=low[id];queue.push(n);
    }
  }
+ // Remove walkable prop tops from the terrain. Furniture is rendered separately.
+ for(const[cx,cy,pw,pd,,a,type]of DUST2_SCENE.structures){
+   if(type!=='crate')continue;const sn=Math.sin(a),cs=Math.cos(a),samples=[];
+   for(const[dx,dy]of[[-pw/2-4,0],[pw/2+4,0],[0,-pd/2-4],[0,pd/2+4]]){
+     const x=Math.floor((cx+dx*sn+dy*cs)/pixels),y=Math.floor((cy-dx*cs+dy*sn)/pixels),value=low[y*w+x];if(Number.isFinite(value))samples.push(value);
+   }
+   if(!samples.length)continue;const base=Math.min(...samples),radius=Math.max(pw,pd)+8;
+   for(let y=Math.max(0,Math.floor((cy-radius)/pixels));y<Math.min(h,(cy+radius)/pixels);y++)for(let x=Math.max(0,Math.floor((cx-radius)/pixels));x<Math.min(w,(cx+radius)/pixels);x++){
+     const dx=(x+.5)*pixels-cx,dy=(y+.5)*pixels-cy,side=dx*sn-dy*cs,front=dx*cs+dy*sn;
+     if(Math.abs(side)<pw/2+2&&Math.abs(front)<pd/2+2&&inside[y*w+x])low[y*w+x]=base;
+   }
+ }
+
  // Architectural landings and straight flights, measured from the NAV plateaus.
  // This intentionally replaces inclined source ground with stairs for the playtest.
  const rect=(x1,y1,x2,y2,value)=>{
@@ -35,7 +48,7 @@ const architecture=vm.runInContext(`(()=>{
    const levels=[1.62,4.68,5.58,7.2,7.92],near=levels.reduce((a,b)=>Math.abs(low[i]-a)<Math.abs(low[i]-b)?a:b);
    if(Math.abs(near-low[i])<.36)low[i]=near;
  }
- rect(74,710,414,784,7.92);rect(151,618,303,710,7.92);
+ rect(74,710,414,784,7.92);rect(151,618,303,710,7.92);rect(151,610,221,634,7.92);
  rect(96,604,151,710,(x,y)=>lerp(y,604,710,4.68,7.92));
  rect(414,706,474,805,(x,y)=>lerp(x,414,474,7.92,4.68));
  rect(102,498,251,604,4.68);rect(160,418,188,498,(x,y)=>lerp(y,418,498,5.58,4.68));
@@ -52,18 +65,6 @@ const architecture=vm.runInContext(`(()=>{
  rect(694,224,795,450,4.68);rect(560,370,694,450,4.68);
  rect(699,450,759,496,(x,y)=>lerp(y,450,496,4.68,1.44));rect(699,496,759,558,1.44);
  for(let i=0;i<count;i++)if(Number.isFinite(upper[i]))upper[i]=7.2;
- // Remove walkable prop tops from the terrain. Furniture is rendered separately.
- for(const[cx,cy,pw,pd,,a,type]of DUST2_SCENE.structures){
-   if(type!=='crate')continue;const sn=Math.sin(a),cs=Math.cos(a),samples=[];
-   for(const[dx,dy]of[[-pw/2-4,0],[pw/2+4,0],[0,-pd/2-4],[0,pd/2+4]]){
-     const x=Math.floor((cx+dx*sn+dy*cs)/pixels),y=Math.floor((cy-dx*cs+dy*sn)/pixels),value=low[y*w+x];if(Number.isFinite(value))samples.push(value);
-   }
-   if(!samples.length)continue;const base=Math.min(...samples),radius=Math.max(pw,pd)+8;
-   for(let y=Math.max(0,Math.floor((cy-radius)/pixels));y<Math.min(h,(cy+radius)/pixels);y++)for(let x=Math.max(0,Math.floor((cx-radius)/pixels));x<Math.min(w,(cx+radius)/pixels);x++){
-     const dx=(x+.5)*pixels-cx,dy=(y+.5)*pixels-cy,side=dx*sn-dy*cs,front=dx*cs+dy*sn;
-     if(Math.abs(side)<pw/2+2&&Math.abs(front)<pd/2+2&&inside[y*w+x])low[y*w+x]=base;
-   }
- }
  const quantum=.18,encode=array=>{
    const rows=[];for(let y=0;y<h;y++){
      const runs=[];let previous=-999,count=0;

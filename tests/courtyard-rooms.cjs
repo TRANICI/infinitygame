@@ -1,0 +1,27 @@
+"use strict";
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const c=vm.createContext({localStorage:{getItem:()=>null}});
+for(const f of ['dust2-layout.js','dust2-scene.js','dust2-architecture.js','annex.js','courtyard-rooms.js','terrain.js','core.js','interactions.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c);
+const r=vm.runInContext(`(()=>{
+ const objects=WZ.createObjects(),s={objects,player:{...WZ.level.start,elevation:WZ.groundHeight(WZ.level.start.x,WZ.level.start.y),stamina:40},enemy:{...WZ.level.enemy},mode:'playing'};
+ const h={save(){},updateHUD(){},subtitle(){},audio:{door(){},pickup(){},power(){}}},i=new WardInteractions(s,h);i.reset();
+ const obj=id=>objects.find(o=>o.id===id),start={...s.player},roomTargets=DUST2_ROOMS.rooms.map(r=>({id:r.id,x:(r.box[0]+r.box[2])/2,y:(r.box[1]+r.box[3])/2,elevation:r.base}));
+ const blocked=roomTargets.map(t=>({id:t.id,blocked:!WZ.findPath(start,t).length}));
+ const locked=obj('room-door-booth');i.interact(locked);const keyRequired=locked.collide;
+ i.search(obj('supply-drawer'));i.interact(locked);const keyOpened=!locked.collide&&i.has('brass-key');
+ for(const o of objects.filter(o=>o.type==='room-door'&&!o.activated))i.interact(o);
+ const walk=(from,to)=>{const e={...from,verticalSpeed:0},path=WZ.findPath(from,to);for(const q of path){for(let n=0;n<30&&WZ.distance(e,q)>.025;n++){const d=WZ.distance(e,q),v=Math.min(.08,d);WZ.move(e,(q.x-e.x)/d*v,(q.y-e.y)/d*v);WZ.settle(e,1/60);}if(WZ.distance(e,q)>.04)return {ok:false,at:e,target:q};}return {ok:path.length>0&&WZ.distance(e,to)<1.6,elevation:e.elevation};};
+ const routes=objects.filter(o=>DUST2_ROOMS.objects.some(v=>v.id===o.id)&&o.label&&!['room-door','field'].includes(o.type)).map(o=>({id:o.id,...walk(start,o)}));
+ const radio=obj('dispatch-radio');i.repair(radio);const requiresParts=!radio.activated;i.search(obj('workshop-tools'));i.search(obj('booth-wire'));i.repair(radio);const repaired=radio.activated&&!i.has('wire')&&i.has('screwdriver');
+ i.search(obj('gatehouse-drawer'));i.search(obj('gatehouse-drawer'));const noDuplicate=s.exploration.inventory.coin===2;i.buy();i.drink();const consumed=s.player.stamina===100&&s.exploration.inventory.coin===1&&!i.has('drink')&&s.exploration.inventory.bottle===3;
+ Object.assign(s.player,{x:26,y:27,elevation:4.68,angle:0});const threw=i.throwBottle(),noise=s.enemy.lureTime===8&&WZ.canStand(s.enemy.lure.x,s.enemy.lure.y,.2,s.enemy.lure.elevation);
+ const saved=JSON.parse(JSON.stringify(s.exploration));i.reset(saved);const restored=radio.activated&&i.has('screwdriver')&&s.exploration.inventory.bottle===2;
+ const door=obj('room-door-supply');Object.assign(s.player,{x:door.x,y:door.y,elevation:door.baseY});i.interact(door);const safeClose=door.activated;
+ Object.assign(s.player,start);i.interact(door);const closed=door.collide&&!WZ.findPath(start,roomTargets[0]).length;
+ return{blocked,keyRequired,keyOpened,routes,requiresParts,repaired,noDuplicate,consumed,threw,noise,restored,safeClose,closed};
+})()`,c);
+console.log(JSON.stringify(r));
+for(const room of r.blocked)assert.ok(room.blocked,'closed door protects '+room.id);
+for(const route of r.routes)assert.ok(route.ok,'physically reachable: '+JSON.stringify(route));
+for(const key of ['keyRequired','keyOpened','requiresParts','repaired','noDuplicate','consumed','threw','noise','restored','safeClose','closed'])assert.ok(r[key],key);
+console.log('PASS: courtyard door isolation, actual walking, keys, inventory, search, repair, purchases, consumables, noise, persistence and safe closing');

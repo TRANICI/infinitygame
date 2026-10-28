@@ -1,7 +1,7 @@
 "use strict";
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const c=vm.createContext({localStorage:{getItem:()=>null}});
-for(const file of ['dust2-layout.js','dust2-scene.js','dust2-architecture.js','terrain.js','core.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
+for(const file of ['dust2-layout.js','dust2-scene.js','dust2-architecture.js','annex.js','courtyard-rooms.js','terrain.js','core.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c);
 const r=vm.runInContext(`(()=>{
  WZ.createObjects();const s=DUST2_LAYOUT.scale,start={x:539*s,y:318*s};
  const e={...start,elevation:WZ.groundHeight(start.x,start.y),verticalSpeed:0};e.eyeElevation=e.elevation;

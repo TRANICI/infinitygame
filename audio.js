@@ -6,9 +6,10 @@ class WardAudio{
     try{
       const Context=window.AudioContext||window.webkitAudioContext;if(!Context)return;
       this.ctx=new Context();this.master=this.ctx.createGain();this.master.gain.value=0;this.master.connect(this.ctx.destination);
-      this.ambient=this.ctx.createGain();this.ambient.gain.value=.035;this.ambient.connect(this.master);
-      [130.81,196,261.63].forEach((freq,i)=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.value=freq;g.gain.value=i===0?.22:.06;o.connect(g);g.connect(this.ambient);o.start();});
-      const n=this.ctx.sampleRate*2;this.noiseBuffer=this.ctx.createBuffer(1,n,this.ctx.sampleRate);const data=this.noiseBuffer.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*.25;this.started=true;
+      this.ambient=this.ctx.createGain();this.ambient.gain.value=.12;this.ambient.connect(this.master);
+      [52,78.3,105].forEach((freq,i)=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.value=freq;g.gain.value=i===0?.22:.06;o.connect(g);g.connect(this.ambient);o.start();});
+      const n=this.ctx.sampleRate*2;this.noiseBuffer=this.ctx.createBuffer(1,n,this.ctx.sampleRate);const data=this.noiseBuffer.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*.25;
+      const vent=this.ctx.createBufferSource(),filter=this.ctx.createBiquadFilter(),air=this.ctx.createGain();vent.buffer=this.noiseBuffer;vent.loop=true;filter.type='bandpass';filter.frequency.value=240;filter.Q.value=.7;air.gain.value=.11;vent.connect(filter);filter.connect(air);air.connect(this.ambient);vent.start();this.started=true;
     }catch{this.ctx=null;}
   }
   volume(v){if(this.ctx)this.master.gain.setTargetAtTime(this.muted?0:v/100*.45,this.ctx.currentTime,.12);}
@@ -21,11 +22,17 @@ class WardAudio{
     if(this.ctx.createStereoPanner){const p=this.ctx.createStereoPanner();p.pan.value=WZ.clamp(pan,-1,1);g.connect(p);p.connect(this.master);}else g.connect(this.master);n.start(t,Math.random());n.stop(t+duration);
   }
   step(running,crouching=false){this.noise(.1,crouching?.025:running?.12:.065,700);}
-  enemyStep(pan,strength){this.noise(.12,strength*.045,500,pan);}
-  pickup(){this.tone(659,.19,.1);this.tone(880,.25,.08,'sine',880,.12);}
+  enemyStep(pan,strength){this.noise(.22,strength*.22,340,pan);this.tone(58,.2,strength*.08,'sine',39);this.noise(.35,strength*.055,1900,pan);}
+  pickup(){this.noise(.16,.06,1600);this.tone(310,.16,.035,'triangle',260);}
   click(){this.noise(.05,.04,1300);}
-  door(){this.noise(.3,.07,650);this.tone(330,.3,.025,'sine',392);}
-  power(){[523,659,784].forEach((f,i)=>this.tone(f,.45,.07,'sine',f,i*.12));}
-  hug(){this.tone(523,.22,.09);this.tone(659,.3,.08,'sine',659,.15);}
-  update(){/* Gentle build: no heartbeat, rumble, alarm or sudden sound. */}
+  door(){this.noise(.45,.11,450);this.tone(143,.55,.025,'triangle',89);}
+  bottle(){this.noise(.22,.09,2800);this.tone(1380,.09,.025,'triangle',620);}
+  power(){this.noise(.3,.1,700);this.tone(48,.8,.07,'triangle',72);}
+  hug(){this.noise(.65,.13,420);this.tone(72,1,.12,'sine',31);}
+  whisper(pan=0){this.noise(1.2,.095,950,pan);this.tone(93,.9,.035,'triangle',76);}
+  tension(stress,dt){this.lastHeart-=dt;if(stress>.22&&this.lastHeart<=0){this.tone(51,.13,stress*.1,'sine',37);this.tone(47,.15,stress*.065,'sine',32,.18);this.lastHeart=1.1-stress*.42;}}
+  environment(player,dt){
+    this.environmentTime=(this.environmentTime||0)+dt;
+    if(this.environmentTime>16){this.environmentTime=0;const pan=Math.sin(player.x*.37+player.y*.13);this.noise(.55,.04,380,pan);this.tone(180,.9,.012,'triangle',94);}
+  }
 }

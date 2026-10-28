@@ -31,6 +31,8 @@ class WardTerrain {
     return best;
   }
   surfaces(x,z,margin=.72){
+    const room=DUST2_ROOMS.at(x,z);if(room)return[{height:room.base,distance:0}];
+    if(DUST2_ANNEX.contains(x,z))return[{height:DUST2_ANNEX.base,distance:0}];
     if(this.architecture){
       const a=this.architecture,gx=Math.floor(x/a.step),gz=Math.floor(z/a.step);if(gx<0||gz<0||gx>=a.width||gz>=a.height)return[];
       const id=gz*a.width+gx,out=[];if(a.lower[id]>=0)out.push({height:a.lower[id]*a.quantum,distance:0});if(a.upper[id]>=0)out.push({height:a.upper[id]*a.quantum,distance:0});return out;
@@ -52,7 +54,7 @@ class WardTerrain {
     return eligible.length?eligible.reduce((a,b)=>Math.abs(a.height-hint)<Math.abs(b.height-hint)?a:b).height:null;
   }
   base(o){
-    if(o.label)return this.height(o.x,o.y)??0;
+    if(o.label||(this.architecture&&!['wall','door','step'].includes(o.type)))return this.height(o.x,o.y)??0;
     const a=o.angle||0,heights=[];
     // Sample around furniture, so a crate's navigable top is not its foundation.
     for(const[x,z]of[[0,0],[-o.width/2-.4,0],[o.width/2+.4,0],[0,-o.depth/2-.4],[0,o.depth/2+.4]]){
@@ -66,7 +68,7 @@ class WardTerrain {
     for(let z=0;z<nh;z++)for(let x=0;x<nw;x++){
       const wx=(x+.5)*step,wz=(z+.5)*step;if(world.solid(wx,wz))continue;
       const ids=[];
-      for(const s of this.surfaces(wx,wz,.6))if(world.canStand(wx,wz,.22,s.height)){
+      for(const s of this.surfaces(wx,wz,.6))if(world.canStand(wx,wz,.27,s.height)){
         ids.push(nodes.length);nodes.push({x:wx,y:wz,elevation:s.height,cellX:x,cellZ:z});
       }
       if(ids.length)cells.set(z*nw+x,ids);
@@ -91,7 +93,7 @@ class WardTerrain {
         const q=nodes[next],rise=q.elevation-p.elevation;
         if(from[next]!==-1||rise>.5||rise<-1.1)continue;
         // Mid-edge checks keep narrow doors and stair corners from being cut.
-        if(!world.canStand((p.x+q.x)/2,(p.y+q.y)/2,.21,Math.max(p.elevation,q.elevation)))continue;
+        if(![.25,.5,.75].every(t=>world.canStand(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,.27,Math.max(p.elevation,q.elevation))))continue;
         from[next]=id;queue.push(next);
       }
     }
