@@ -1,7 +1,7 @@
 "use strict";
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'dist');
-const files=['index.html','viewport.js','style.css','dust2-layout.js','dust2-scene.js','dust2-architecture.js','annex.js','courtyard-rooms.js','terrain.js','core.js','audio.js','renderer.js','atmosphere.js','world3d.js','input.js','cartography.js','scare.js','pursuer.js','stalker-model.js','interactions.js','investigation.js','game.js'];
+const files=['index.html','viewport.js','style.css','dust2-layout.js','dust2-architecture.js','dust2-objects.js','terrain.js','fps-map.js','fps-match.js','fps-audio.js','fps-renderer.js','fps-game.js'];
 fs.mkdirSync(out,{recursive:true});
 // Remove retired runtime files from the generated directory before publishing.
 for(const entry of fs.readdirSync(out,{withFileTypes:true}))if(entry.isFile()&&!files.includes(entry.name)&&entry.name!=='.nojekyll')fs.unlinkSync(path.join(out,entry.name));

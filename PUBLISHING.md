@@ -1,15 +1,12 @@
 # 发布到 GitHub Pages
 
-仓库：`TRANICI/infinitygame`。Pages 地址：`https://tranici.github.io/infinitygame/`。部署状态以仓库 Actions 中的 **Publish game to GitHub Pages** 为准。
+源码仓库：https://github.com/TRANICI/infinitygame
+游戏地址：https://tranici.github.io/infinitygame/
 
-1. 在 GitHub 创建公开仓库 `TRANICI/infinitygame`。
-2. 上传项目源码，包含 `.github/workflows/pages.yml`，不要上传 `test-results/` 或 Steam 文件。
-3. 仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
-4. 将代码推送到 `main`，或在 Actions 手动运行 **Publish game to GitHub Pages**。
-5. 工作流成功后，把部署页面显示的地址发给朋友。
+推送 main 会触发 .github/workflows/pages.yml。工作流依次执行 npm run check、npm test、npm run build，将 dist/ 发布至 GitHub Pages。也可在仓库 Actions 中手动运行「Publish game to GitHub Pages」。
 
-项目没有后端。`npm run build` 生成的 `dist/` 只包含静态运行文件，使用相对路径，支持 GitHub 项目子目录。
+dist/ 采用白名单打包，只包含 12 个运行文件及 .nojekyll，不携带源 NAV 数据、截图、测试脚本或旧医院资源。所有脚本与样式使用相对路径，适用于 /infinitygame/ 子目录，也支持直接打开本地 index.html。
 
-本地上传使用 Git Credential Manager 的浏览器授权。凭据保存在 Windows 凭据管理器中，不写入项目或发布包。
+发布前执行 python tests/fps-ui.py 检查构建产物。发布后检查页面的 build 元信息、实际载入版本，以及玩家加九名 AI 的开局。浏览器缓存旧版时刷新页面。
 
-参考：[GitHub 官方说明](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)。
+本机 Git 凭据由系统凭据管理器处理，不写入源码或静态包。

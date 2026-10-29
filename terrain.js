@@ -1,6 +1,6 @@
 "use strict";
 // Source NAV elevations retain overlapping floors (CT under A short), not a heightmap.
-class WardTerrain {
+class DustTerrain {
   constructor(){
     this.scale=DUST2_LAYOUT.scale;this.bins=new Map();this.triangles=[];this.navigation=null;
     if(typeof DUST2_ARCHITECTURE!=='undefined'){
@@ -31,8 +31,6 @@ class WardTerrain {
     return best;
   }
   surfaces(x,z,margin=.72){
-    const room=DUST2_ROOMS.at(x,z);if(room)return[{height:room.base,distance:0}];
-    if(DUST2_ANNEX.contains(x,z))return[{height:DUST2_ANNEX.base,distance:0}];
     if(this.architecture){
       const a=this.architecture,gx=Math.floor(x/a.step),gz=Math.floor(z/a.step);if(gx<0||gz<0||gx>=a.width||gz>=a.height)return[];
       const id=gz*a.width+gx,out=[];if(a.lower[id]>=0)out.push({height:a.lower[id]*a.quantum,distance:0});if(a.upper[id]>=0)out.push({height:a.upper[id]*a.quantum,distance:0});return out;
@@ -73,7 +71,7 @@ class WardTerrain {
       }
       if(ids.length)cells.set(z*nw+x,ids);
     }
-    return this.navigation={step,nw,nh,nodes,cells};
+    return this.navigation={step,nw,nh,nodes,cells,links:new Map()};
   }
   path(a,b,world){
     const nav=this.navigation||this.buildNavigation(world),{step,nw,nodes,cells}=nav;
@@ -89,13 +87,17 @@ class WardTerrain {
     const from=new Int32Array(nodes.length).fill(-1),queue=[start];from[start]=start;
     for(let head=0;head<queue.length;head++){
       const id=queue[head];if(id===end)break;const p=nodes[id];
-      for(const[dx,dz]of[[-1,0],[1,0],[0,-1],[0,1]])for(const next of cells.get((p.cellZ+dz)*nw+p.cellX+dx)||[]){
-        const q=nodes[next],rise=q.elevation-p.elevation;
-        if(from[next]!==-1||rise>.5||rise<-1.1)continue;
-        // Mid-edge checks keep narrow doors and stair corners from being cut.
-        if(![.25,.5,.75].every(t=>world.canStand(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,.27,Math.max(p.elevation,q.elevation))))continue;
-        from[next]=id;queue.push(next);
+      if(!nav.links.has(id)){
+        const links=[];
+        for(const[dx,dz]of[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]])for(const next of cells.get((p.cellZ+dz)*nw+p.cellX+dx)||[]){
+          const q=nodes[next],rise=q.elevation-p.elevation;
+          if(rise>.5||rise<-1.1)continue;
+          if(![.25,.5,.75].every(t=>world.canStand(p.x+(q.x-p.x)*t,p.y+(q.y-p.y)*t,.27,Math.max(p.elevation,q.elevation))))continue;
+          links.push(next);
+        }nav.links.set(id,links);
       }
+      for(const next of nav.links.get(id)){if(from[next]!==-1)continue;from[next]=id;queue.push(next);}
+
     }
     if(from[end]===-1)return[];const result=[];for(let id=end;;id=from[id]){result.push(nodes[id]);if(id===start)break;}return result.reverse();
   }

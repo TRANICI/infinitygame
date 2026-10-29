@@ -10,4 +10,4 @@ const server=http.createServer((req,res)=>{
   fs.readFile(target,(err,data)=>{if(err){res.writeHead(404);res.end('Not found');return;}res.writeHead(200,{'Content-Type':types[path.extname(target)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);});
 });
 server.on('error',e=>{console.error(e.code==='EADDRINUSE'?'Port '+port+' is busy. Set PORT to another port.':e.message);process.exitCode=1;});
-server.listen(port,'127.0.0.1',()=>console.log('WARD ZERO: http://127.0.0.1:'+port+'\nPress Ctrl+C to stop.'));
+server.listen(port,'127.0.0.1',()=>console.log('DUSTLINE: http://127.0.0.1:'+port+'\nPress Ctrl+C to stop.'));

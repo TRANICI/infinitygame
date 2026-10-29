@@ -3,9 +3,9 @@
 // Raw navigation polygons contain prop tops and cannot be used as visible scenery.
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),context=vm.createContext({});
-for(const file of ['dust2-layout.js','dust2-scene.js','dust2-terrain-data.js','terrain.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['dust2-layout.js','dust2-objects.js','dust2-terrain-data.js','terrain.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const architecture=vm.runInContext(`(()=>{
- const source=new WardTerrain(),pixels=2,step=pixels*DUST2_LAYOUT.scale,w=Math.ceil(820/pixels),h=Math.ceil(805/pixels),count=w*h;
+ const source=new DustTerrain(),pixels=2,step=pixels*DUST2_LAYOUT.scale,w=Math.ceil(820/pixels),h=Math.ceil(805/pixels),count=w*h;
  const low=new Float32Array(count).fill(NaN),upper=new Float32Array(count).fill(NaN),inside=new Uint8Array(count),queue=[];
  const isFloor=(x,y)=>{const row=DUST2_LAYOUT.rows[Math.floor(y)],px=Math.floor(x);return row&&row.some((v,i)=>i%2===0&&px>=v&&px<row[i+1]);};
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
@@ -24,7 +24,7 @@ const architecture=vm.runInContext(`(()=>{
    }
  }
  // Remove walkable prop tops from the terrain. Furniture is rendered separately.
- for(const[cx,cy,pw,pd,,a,type]of DUST2_SCENE.structures){
+ for(const[cx,cy,pw,pd,,a,type]of DUST2_OBJECTS.structures){
    if(type!=='crate')continue;const sn=Math.sin(a),cs=Math.cos(a),samples=[];
    for(const[dx,dy]of[[-pw/2-4,0],[pw/2+4,0],[0,-pd/2-4],[0,pd/2+4]]){
      const x=Math.floor((cx+dx*sn+dy*cs)/pixels),y=Math.floor((cy-dx*cs+dy*sn)/pixels),value=low[y*w+x];if(Number.isFinite(value))samples.push(value);
